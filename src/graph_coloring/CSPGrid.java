@@ -1,5 +1,7 @@
 package graph_coloring;
 
+import java.util.HashSet;
+
 public class CSPGrid
 {
     private Grid grid;      //Grid to solve by CSPGrid
@@ -13,6 +15,45 @@ public class CSPGrid
     {
         grid = new Grid(_gSize);
         endB = false;
+    }
+
+    //---------------------------------
+    // BACKTRACKING & FORWARD-CHECKING |-----------------------------------------------------------
+    //---------------------------------
+
+    public int Backtracking(int level)
+    {
+        int levell = level;
+        //int amountOfResults = 0;
+
+        if(endB) return 0;
+
+        //Grid CSP completed!
+        if(grid.hasFilledNodes())
+        {
+            grid.printGrid();
+            System.out.println();
+            endB = true;
+            return 0;
+        }
+
+        //Basic information about founded position
+        Position pos = grid.getNotFilledPosition();                 //Founded position
+        //int row = pos.getRow();                                     //row of this position
+        //int column = pos.getColumn();                               //column of this positon
+        HashSet posDomain = grid.getDomainAtPosition(pos); //domain of this position
+
+        //Choosing a color from domain at position (Constraints CHECKING)
+        for(int i = 0; i < posDomain.size(); i++)
+        {
+            //Setting a first color from domain
+            grid.setColorAtPosition(i, pos);
+            boolean ok = true;
+
+            //Checking constraints
+        }
+
+        return 0;
     }
 
     //--------------------
