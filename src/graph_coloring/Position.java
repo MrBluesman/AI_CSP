@@ -51,5 +51,15 @@ public class Position
     {
         this.column = column;
     }
+
+    /**
+     * toString for a Position
+     * @return String print of position with its row and column
+     */
+    @Override
+    public String toString()
+    {
+        return "row: " + row + " | column: " + column;
+    }
 }
 

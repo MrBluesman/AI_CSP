@@ -25,12 +25,12 @@ public class CSPGrid
     {
         int levell = level;
         //int amountOfResults = 0;
-
+//        System.out.println(levell);
         if(endB) return 0;
-
         //Grid CSP completed!
         if(grid.hasFilledNodes())
         {
+//            System.out.println("BAKDJKSHFDJKSDF");
             grid.printGrid();
             System.out.println();
             endB = true;
@@ -39,9 +39,12 @@ public class CSPGrid
 
         //Basic information about founded position
         Position pos = grid.getNotFilledPosition();                 //Founded position
+//        System.out.println("psiapsia");
+//        System.out.println(pos);
         //int row = pos.getRow();                                     //row of this position
         //int column = pos.getColumn();                               //column of this positon
         HashSet posDomain = grid.getDomainAtPosition(pos); //domain of this position
+//        System.out.println(posDomain);
 
         //Choosing a color from domain at position (Constraints CHECKING)
         for(int i = 0; i < posDomain.size(); i++)
@@ -51,6 +54,32 @@ public class CSPGrid
             boolean ok = true;
 
             //Checking constraints
+            if(grid.hasDifferentColorsWithNeighbours(pos) && grid.hasDifferentColorsWithNeighbours(pos, 2))
+            {
+                grid.setPositionAsFilled(pos);
+            }
+            else
+            {
+                grid.unsetColorAtPosition(pos);
+                ok = false;
+            }
+
+            if(ok)
+            {
+//                grid.printGrid();
+                Backtracking(levell + 1);
+                //Cleaning after backing from recursion
+                grid.unsetPositionAsFilled(pos);
+                grid.unsetColorAtPosition(pos);
+            }
+        }
+
+        //if we are on the first Backtracking levell our colors amount is not enough
+        //We need to expand domains and run Backtracking again
+        if(levell == 0 && !endB)
+        {
+            grid.expandDomains();
+            Backtracking(0);
         }
 
         return 0;

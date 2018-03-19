@@ -10,7 +10,8 @@ public class Grid
     private int N;  //Grid size
     private Integer[][] grid_array;             //Array of CSP variables (Grid implementation)
     private List<Integer> filled_positions;     //Filled positions
-    private HashSet[][] grid_domains;  //domains of each variable
+    private HashSet[][] grid_domains;           //domains of each variable
+    private int colors_amount;                  //Amount of color (domain size)
 
     /**
      * Grid constructor - creates a Grid instance with randomized N size
@@ -21,6 +22,7 @@ public class Grid
         N = 5;
         grid_array = new Integer[N][N];
         filled_positions = new ArrayList<>();
+        colors_amount = 0;
 
         //Initializing a HashSet for each CSP variable in array
         grid_domains = new HashSet[N][N];
@@ -29,6 +31,7 @@ public class Grid
             {
                 grid_domains[i][j] = new HashSet<>();
             }
+
     }
 
     /**
@@ -40,6 +43,7 @@ public class Grid
         this.N = _N;
         grid_array = new Integer[N][N];
         filled_positions = new ArrayList<>();
+        colors_amount = 0;
 
         //Initializing a HashSet for each CSP variable in array
         grid_domains = new HashSet[N][N];
@@ -47,7 +51,12 @@ public class Grid
             for (int j = 0; j < grid_domains[i].length; j++)
             {
                 grid_domains[i][j] = new HashSet<>();
+                grid_domains[i][j].add(0);
+
+
             }
+
+        grid_domains[0][0].add(1);
     }
 
     //----------
@@ -82,6 +91,7 @@ public class Grid
         while(i < getVarAmount())
         {
             if(!filled_positions.contains(i)) return new Position(i/N, i%N);
+            i++;
         }
         return null;
     }
@@ -120,7 +130,7 @@ public class Grid
      */
     public HashSet getDomainAtPosition(Position _p)
     {
-        return grid_domains[_p.getRow()][_p.getColumn()];
+        return _p != null ? grid_domains[_p.getRow()][_p.getColumn()] : new HashSet();
     }
 
     /**
@@ -152,8 +162,51 @@ public class Grid
         return grid_array[_p.getRow()][_p.getColumn()];
     }
 
-    //CONSTRAINT 1 - Different color with neighbours
+    /**
+     * Sets specified Position as filled - this position has a color assigned
+     * @param _p Position which we want to set
+     */
+    public void setPositionAsFilled(Position _p)
+    {
+        filled_positions.add((_p.getRow() * N) + _p.getColumn());
+    }
 
+    /**
+     * Sets specified Position as not filled - this position hasn't a color assigned
+     * @param _p Position which we want to unset
+     */
+    public void unsetPositionAsFilled(Position _p)
+    {
+        filled_positions.remove(Integer.valueOf((_p.getRow() * N) + _p.getColumn()));
+    }
+
+    /**
+     * Expands all vars domains by 1 if we don't have enough enough colors
+     */
+    public void expandDomains()
+    {
+        colors_amount++;
+        for (int i = 0; i < grid_domains.length; i++)
+            for (int j = 0; j < grid_domains[i].length; j++)
+            {
+                grid_domains[i][j].add(colors_amount);
+            }
+    }
+
+    /**
+     * Reduces all vars domains by 1
+     */
+    public void reduceDomains()
+    {
+        for (int i = 0; i < grid_domains.length; i++)
+            for (int j = 0; j < grid_domains[i].length; j++)
+            {
+                grid_domains[i][j].remove(colors_amount);
+            }
+        colors_amount--;
+    }
+
+    //CONSTRAINT 1 - Different color with neighbours
     /**
      * Checks if variables at specified positions has different colors (different values)
      * @param _p1 Position of 1st variable
@@ -175,12 +228,42 @@ public class Grid
         }
     }
 
-    public boolean hasDifferentColorsWithNeighbors(Position _p)
+    public boolean hasDifferentColorsWithNeighbours(Position _p)
     {
         return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()))          //LEFT
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() + 1))     //RIGHT
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn()))       //UP
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 1)));   //DOWN
+    }
+
+    //CONSTRAINT 2 - Values of colors with neighbours are different by at least 2
+    /**
+     * Checks if variables at specified positions has different values of colors (at least by _diff)
+     * @param _p1 Position of 1st variable
+     * @param _p2 Position of 2nd variable
+     * @param _diff Minimal difference between values of colors
+     * @return True if has different values of colors at least by _diff, false if it's not
+     */
+    public boolean hasDifferentColorsAtPositions(Position _p1, Position _p2, int _diff)
+    {
+        try
+        {
+            Integer color1 = getColorAtPosition(_p1);
+            Integer color2 = getColorAtPosition(_p2);
+            return Math.abs(color1 - color2) >= _diff;
+        }
+        catch (ArrayIndexOutOfBoundsException | NullPointerException e)
+        {
+            return true;
+        }
+    }
+
+    public boolean hasDifferentColorsWithNeighbours(Position _p, int _diff)
+    {
+        return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()), _diff)          //LEFT
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() + 1), _diff)     //RIGHT
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn()), _diff)       //UP
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 1), _diff));   //DOWN
     }
 
     //-----------
@@ -290,13 +373,30 @@ public class Grid
 
     /**
      * Grid_domains setter
-     * @param grid_domains new Grid_domains (for each CSP variable) to replace with this
+     * @param _grid_domains new Grid_domains (for each CSP variable) to replace with this
      */
-    public void setGrid_domains(HashSet[][] grid_domains)
+    public void setGrid_domains(HashSet[][] _grid_domains)
     {
-        this.grid_domains = grid_domains;
+        this.grid_domains = _grid_domains;
     }
 
+    /**
+     * Colors_amount getter
+     * @return value of colors_amount (domain size)
+     */
+    public int getColors_amount()
+    {
+        return colors_amount;
+    }
+
+    /**
+     * Colors_amount setter
+     * @param _colors_amount new colors_amount to replace with this
+     */
+    public void setColors_amount(int _colors_amount)
+    {
+        this.colors_amount = _colors_amount;
+    }
     //--------------------------------------------------------------------------------
 }
 
