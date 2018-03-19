@@ -289,12 +289,10 @@ public class Grid
      */
     public void printGrid()
     {
-        for(int i = 0; i < N; i++)
+        for (Integer[] aGrid_array : grid_array)
         {
-            for(int j = 0; j < N; j++)
-            {
-                System.out.print(grid_array[i][j] + " ");
-            }
+            for (Integer anAGrid_array : aGrid_array)
+                System.out.print("\u001B[3" + anAGrid_array + "m" + "[" + anAGrid_array + "]");
             System.out.println();
         }
     }
