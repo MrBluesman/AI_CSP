@@ -230,10 +230,10 @@ public class Grid
 
     public boolean hasDifferentColorsWithNeighbours(Position _p)
     {
-        return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()))          //LEFT
+        return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()))          //UP
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() + 1))     //RIGHT
-                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn()))       //UP
-                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 1)));   //DOWN
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn()))       //DOWN
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 1)));   //LEFT
     }
 
     //CONSTRAINT 2 - Values of colors with neighbours are different by at least 2
@@ -260,10 +260,24 @@ public class Grid
 
     public boolean hasDifferentColorsWithNeighbours(Position _p, int _diff)
     {
-        return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()), _diff)          //LEFT
+        return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()), _diff)          //UP
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() + 1), _diff)     //RIGHT
-                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn()), _diff)       //UP
-                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 1), _diff));   //DOWN
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn()), _diff)       //DOWN
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 1), _diff));   //LEFT
+    }
+
+    //CONSTRAINT 3 - Different Colors with positions distant by 2
+    public boolean hasDifferentColorsWithPositionsDistantBy2(Position _p)
+    {
+        return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 2, _p.getColumn()))                    //N
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn() + 1))     //N-E
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() + 2))               //E
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn() + 1))     //S-E
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 2, _p.getColumn()))                 //S
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() + 1, _p.getColumn() - 1))     //S-W
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 2))               //W
+                && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn() - 1))     //N-W
+        );
     }
 
     //-----------

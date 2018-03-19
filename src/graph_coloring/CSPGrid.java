@@ -54,7 +54,8 @@ public class CSPGrid
             boolean ok = true;
 
             //Checking constraints
-            if(grid.hasDifferentColorsWithNeighbours(pos) && grid.hasDifferentColorsWithNeighbours(pos, 2))
+            if(grid.hasDifferentColorsWithNeighbours(pos, 2)
+                    && grid.hasDifferentColorsWithPositionsDistantBy2(pos))
             {
                 grid.setPositionAsFilled(pos);
             }
