@@ -25,32 +25,25 @@ public class CSPGrid
     {
         int levell = level;
         //int amountOfResults = 0;
-//        System.out.println(levell);
         if(endB) return 0;
         //Grid CSP completed!
         if(grid.hasFilledNodes())
         {
-//            System.out.println("BAKDJKSHFDJKSDF");
             grid.printGrid();
             System.out.println();
             endB = true;
             return 0;
         }
 
-        //Basic information about founded position
+        //Get a position and its domain
         Position pos = grid.getNotFilledPosition();                 //Founded position
-//        System.out.println("psiapsia");
-//        System.out.println(pos);
-        //int row = pos.getRow();                                     //row of this position
-        //int column = pos.getColumn();                               //column of this positon
-        HashSet posDomain = grid.getDomainAtPosition(pos); //domain of this position
-//        System.out.println(posDomain);
+        HashSet<Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
         //Choosing a color from domain at position (Constraints CHECKING)
-        for(int i = 0; i < posDomain.size(); i++)
+        for(Integer color : posDomain)
         {
             //Setting a first color from domain
-            grid.setColorAtPosition(i, pos);
+            grid.setColorAtPosition(color, pos);
             boolean ok = true;
 
             //Checking constraints
@@ -75,7 +68,7 @@ public class CSPGrid
             }
         }
 
-        //if we are on the first Backtracking levell our colors amount is not enough
+        //if we are on the first Backtracking level our colors amount is not enough
         //We need to expand domains and run Backtracking again
         if(levell == 0 && !endB)
         {

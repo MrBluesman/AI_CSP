@@ -10,7 +10,7 @@ public class Position
      * @param _row number of row in Grid
      * @param _column number of column in Grid
      */
-    public Position(int _row, int _column)
+    Position(int _row, int _column)
     {
         this.row = _row;
         this.column = _column;
@@ -20,7 +20,7 @@ public class Position
      * Row getter
      * @return number of row in Grid
      */
-    public int getRow()
+    int getRow()
     {
         return row;
     }
@@ -38,7 +38,7 @@ public class Position
      * Column getter
      * @return number of column in Grid
      */
-    public int getColumn()
+    int getColumn()
     {
         return column;
     }
