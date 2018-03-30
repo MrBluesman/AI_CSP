@@ -25,9 +25,11 @@ public class CSPLatinSquare
 
     public int Backtracking(int level)
     {
+
         int levell = level;
         //int amountOfResults = 0;
         if(endB) return 0;
+
         //Grid CSP completed!
         if(grid.hasFilledNodes())
         {
@@ -42,16 +44,17 @@ public class CSPLatinSquare
         HashSet<Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
         //Choosing a color from domain at position (Constraints CHECKING)
-        for(Integer color : posDomain)
+        for(Integer val : posDomain)
         {
             //Setting a first color from domain
-            grid.setValAtPosition(color, pos);
+            grid.setValAtPosition(val, pos);
             boolean ok = true;
-
+//            
             //Checking constraints
             if(grid.hasUniqueRow(pos) && grid.hasUniqueColumn(pos))
             {
                 grid.setPositionAsFilled(pos);
+//                System.out.println("jestem");
             }
             else
             {

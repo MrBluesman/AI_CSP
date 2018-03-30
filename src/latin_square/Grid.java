@@ -99,7 +99,7 @@ public class Grid
      * @param _p Position which value we want to get
      * @return Color of _p position if exists, null if it's not
      */
-    Integer getValAtPositionIfExists(Position _p)
+    private Integer getValAtPositionIfExists(Position _p)
     {
         try
         {
@@ -133,12 +133,12 @@ public class Grid
 
     /**
      * Sets a value at specified position (sets a value of CSP variable at position)
-     * @param _c Color which we want to set
+     * @param _v Value which we want to set
      * @param _p Position of CSP variable which value we want to set
      */
-    void setValAtPosition(Integer _c, Position _p)
+    void setValAtPosition(Integer _v, Position _p)
     {
-        grid_array[_p.getRow()][_p.getColumn()] = _c;
+        grid_array[_p.getRow()][_p.getColumn()] = _v;
     }
 
     /**
@@ -204,6 +204,7 @@ public class Grid
                 }
                 else isRowUnique = false;
             }
+            i++;
         }
         return isRowUnique;
     }
@@ -230,6 +231,7 @@ public class Grid
                 }
                 else isColumnUnique = false;
             }
+            i++;
         }
         return isColumnUnique;
     }
@@ -246,7 +248,7 @@ public class Grid
         for (Integer[] aGrid_array : grid_array)
         {
             for (Integer anAGrid_array : aGrid_array)
-                System.out.print("\u001B[3" + anAGrid_array + "m" + "[" + anAGrid_array + "]");
+                System.out.print("[" + anAGrid_array + "]");
             System.out.println();
         }
     }
@@ -254,7 +256,7 @@ public class Grid
     /**
      * Prints a domain of each Grid position in array (each CSP variable)
      */
-    void printAllDomains()
+    public void printAllDomains()
     {
         int i = 0;
         for(HashSet<Integer> posDomain : grid_domains)
