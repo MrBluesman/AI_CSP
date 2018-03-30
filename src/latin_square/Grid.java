@@ -18,9 +18,9 @@ public class Grid
      */
     Grid()
     {
-        //Randomized N (from 1 to 10)
+        //Randomized N (from 2 to 10)
         Random rand = new Random();
-        N = rand.nextInt(10) + 1;
+        N = rand.nextInt(10) + 2;
         grid_array = new Integer[N][N];
         filled_positions = new ArrayList<>();
 
@@ -60,6 +60,211 @@ public class Grid
     //----------
     // METHODS |-----------------------------------------------------------
     //----------
+
+    /**
+     * Checks if the graph coloring is completed
+     * @return true if the graph coloring is completed, false if it's not
+     */
+    boolean hasFilledNodes()
+    {
+        return filled_positions.size() == this.getVarAmount();
+    }
+
+    /**
+     * Amount of Graph variables getter
+     * @return Amount of Graph variables to fill
+     */
+    private int getVarAmount()
+    {
+        return N * N;
+    }
+
+    /**
+     * Finds a uncolored position
+     * @return position of uncolored Graph variable
+     */
+    Position getNotFilledPosition()
+    {
+        int i = 0;
+        while(i < getVarAmount())
+        {
+            if(!filled_positions.contains(i)) return new Position(i/N, i%N);
+            i++;
+        }
+        return null;
+    }
+
+    /**
+     * If _p position exists return a assigned value of its
+     * @param _p Position which value we want to get
+     * @return Color of _p position if exists, null if it's not
+     */
+    Integer getValAtPositionIfExists(Position _p)
+    {
+        try
+        {
+            return grid_array[_p.getRow()][_p.getColumn()];
+        }
+        catch (ArrayIndexOutOfBoundsException | NullPointerException r)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Checks if _p Position is filled
+     * @param _p Position which we checking
+     * @return True if is filled, false if its not
+     */
+    boolean isFilledPosition(Position _p)
+    {
+        return getValAtPositionIfExists(_p) != null;
+    }
+
+    /**
+     * Gets a domain of variable at position
+     * @param _p Position of variable which domain we want
+     * @return Domain of variable at _p position
+     */
+    HashSet<Integer> getDomainAtPosition(Position _p)
+    {
+        return _p != null ? grid_domains.get((N * _p.getRow()) + _p.getColumn()) : new HashSet<>();
+    }
+
+    /**
+     * Sets a value at specified position (sets a value of CSP variable at position)
+     * @param _c Color which we want to set
+     * @param _p Position of CSP variable which value we want to set
+     */
+    void setValAtPosition(Integer _c, Position _p)
+    {
+        grid_array[_p.getRow()][_p.getColumn()] = _c;
+    }
+
+    /**
+     * Unsets a value at specified position (unsets a value of CSP variable at position)
+     * @param _p Position of CSP variable which value we want to unset
+     */
+    void unsetValAtPosition(Position _p)
+    {
+        grid_array[_p.getRow()][_p.getColumn()] = null;
+    }
+
+    /**
+     * Gets a value at specified position (gets a value of CSP variable at position)
+     * @param _p Position of CSP variable which value we want to get
+     * @return value at specified position (value of CSP variable at position)
+     */
+    private Integer getValAtPosition(Position _p)
+    {
+        return grid_array[_p.getRow()][_p.getColumn()];
+    }
+
+    /**
+     * Sets specified Position as filled - this position has a color assigned
+     * @param _p Position which we want to set
+     */
+    void setPositionAsFilled(Position _p)
+    {
+        filled_positions.add((_p.getRow() * N) + _p.getColumn());
+    }
+
+    /**
+     * Sets specified Position as not filled - this position hasn't a color assigned
+     * @param _p Position which we want to unset
+     */
+    void unsetPositionAsFilled(Position _p)
+    {
+        filled_positions.remove(Integer.valueOf((_p.getRow() * N) + _p.getColumn()));
+    }
+
+    //-------------
+    // CONSTRAINTS |-------------------------------------------------------------
+    //-------------
+
+    //CONSTRAINT 1 - UNIQUE ROW
+    /**
+     * Checks if the row of position is unique (Constraint 1 of Latin square)
+     * @param _p Position which row we want to check
+     * @return true if it's unique, false if it's not
+     */
+    boolean hasUniqueRow(Position _p)
+    {
+        int row = _p.getRow();
+        HashSet<Integer> rowVals = new HashSet<>();
+        boolean isRowUnique = true;
+        int i = 0;
+        while(i < N && isRowUnique)
+        {
+            if(grid_array[row][i] != null)
+            {
+                if (!rowVals.contains(grid_array[row][i]))
+                {
+                    rowVals.add(grid_array[row][i]);
+                }
+                else isRowUnique = false;
+            }
+        }
+        return isRowUnique;
+    }
+
+    //CONSTRAINT 2 - UNIQUE COLUMN
+    /**
+     * Checks if the column of position is unique (Constraint 2 of Latin square)
+     * @param _p Position which column we want to check
+     * @return true if it's unique, false if it's not
+     */
+    boolean hasUniqueColumn(Position _p)
+    {
+        int column = _p.getColumn();
+        HashSet<Integer> columnVals = new HashSet<>();
+        boolean isColumnUnique = true;
+        int i = 0;
+        while(i < N && isColumnUnique)
+        {
+            if(grid_array[i][column] != null)
+            {
+                if (!columnVals.contains(grid_array[i][column]))
+                {
+                    columnVals.add(grid_array[i][column]);
+                }
+                else isColumnUnique = false;
+            }
+        }
+        return isColumnUnique;
+    }
+
+    //-----------
+    // PRINTERS |-------------------------------------------------------------
+    //-----------
+
+    /**
+     * Prints Grid
+     */
+    void printGrid()
+    {
+        for (Integer[] aGrid_array : grid_array)
+        {
+            for (Integer anAGrid_array : aGrid_array)
+                System.out.print("\u001B[3" + anAGrid_array + "m" + "[" + anAGrid_array + "]");
+            System.out.println();
+        }
+    }
+
+    /**
+     * Prints a domain of each Grid position in array (each CSP variable)
+     */
+    void printAllDomains()
+    {
+        int i = 0;
+        for(HashSet<Integer> posDomain : grid_domains)
+        {
+            System.out.print("Pole " + i/N + "/" + i%N + " domains = ");
+            for(Integer valFromDomain : posDomain) System.out.print(valFromDomain + " | ");
+            System.out.println();
+            i++;
+        }
+    }
 
     //--------------------
     // SETTERS & GETTERS |-------------------------------------------------------------
