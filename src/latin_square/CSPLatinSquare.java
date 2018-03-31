@@ -1,6 +1,9 @@
 package latin_square;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CSPLatinSquare
 {
@@ -41,20 +44,20 @@ public class CSPLatinSquare
 
         //Get a position and its domain
         Position pos = grid.getNotFilledPosition();                 //Founded position
-        HashSet<Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
+        ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
-        //Choosing a color from domain at position (Constraints CHECKING)
-        for(Integer val : posDomain)
+        for (Object o : posDomain.entrySet())
         {
+            Map.Entry pair = (Map.Entry) o;
+            Integer val = (Integer) pair.getKey();
             //Setting a first color from domain
             grid.setValAtPosition(val, pos);
             boolean ok = true;
-//            
+//
             //Checking constraints
-            if(grid.hasUniqueRow(pos) && grid.hasUniqueColumn(pos))
+            if (grid.hasUniqueRow(pos) && grid.hasUniqueColumn(pos))
             {
                 grid.setPositionAsFilled(pos);
-//                System.out.println("jestem");
             }
             else
             {
@@ -62,24 +65,66 @@ public class CSPLatinSquare
                 ok = false;
             }
 
-            if(ok)
+            if (ok)
             {
-//                grid.printGrid();
                 Backtracking(levell + 1);
                 //Cleaning after backing from recursion
                 grid.unsetPositionAsFilled(pos);
                 grid.unsetValAtPosition(pos);
             }
         }
+        return 0;
+    }
 
-//        //if we are on the first Backtracking level our colors amount is not enough
-//        //We need to expand domains and run Backtracking again
-//        if(levell == 0 && !endB)
-//        {
-//            grid.expandDomains();
-//            Backtracking(0);
-//        }
+    public int ForwardChecking(int level)
+    {
 
+        int levell = level;
+        //int amountOfResults = 0;
+        if(endB) return 0;
+
+        //Grid CSP completed!
+        if(grid.hasFilledNodes())
+        {
+            grid.printGrid();
+            System.out.println();
+            endB = true;
+            return 0;
+        }
+
+        //Get a position and its domain
+        Position pos = grid.getNotFilledPosition();                 //Founded position
+        ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
+
+        for (Object o : posDomain.entrySet())
+        {
+            Map.Entry pair = (Map.Entry) o;
+            Integer val = (Integer) pair.getKey();
+            //Setting a first color from domain
+            grid.setValAtPosition(val, pos);
+            boolean ok = true;
+//
+            //Checking constraints
+            if (grid.hasUniqueRow(pos) && grid.hasUniqueColumn(pos))
+            {
+                grid.setPositionAsFilled(pos);
+                grid.deleteValsFromDomainsForward(pos, val);
+            }
+            else
+            {
+                grid.unsetValAtPosition(pos);
+                ok = false;
+            }
+
+            if (ok)
+            {
+                ForwardChecking(levell + 1);
+                //Cleaning after backing from recursion
+                grid.backDeletedValsFromDomains(pos, val);
+                grid.unsetPositionAsFilled(pos);
+                grid.unsetValAtPosition(pos);
+            }
+        }
         return 0;
     }
 

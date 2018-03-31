@@ -1,16 +1,14 @@
 package latin_square;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Grid
 {
     private int N;                              //Grid size
     private Integer[][] grid_array;             //Array of CSP variables (Grid implementation)
     private List<Integer> filled_positions;     //Filled positions
-    private List<HashSet<Integer>> grid_domains; //domains for each variable (position) (List of positions implement.)
+    private List<ConcurrentHashMap<Integer, Integer>> grid_domains;
 
     /**
      * Grid constructor - creates a Grid instance with randomized N size
@@ -29,8 +27,8 @@ public class Grid
         grid_domains = new ArrayList<>();
         for(int i = 0; i < N * N; i++)
         {
-            HashSet<Integer> domain = new HashSet<>();
-            for(int val = 0; val < N; val++) domain.add(val);
+            ConcurrentHashMap<Integer, Integer> domain = new ConcurrentHashMap<>();
+            for(int val = 0; val < N; val++) domain.put(val, val);
             grid_domains.add(domain);
         }
     }
@@ -51,8 +49,8 @@ public class Grid
         grid_domains = new ArrayList<>();
         for(int i = 0; i < N * N; i++)
         {
-            HashSet<Integer> domain = new HashSet<>();
-            for(int val = 0; val < N; val++) domain.add(val);
+            ConcurrentHashMap<Integer, Integer> domain = new ConcurrentHashMap<>();
+            for(int val = 0; val < N; val++) domain.put(val, val);
             grid_domains.add(domain);
         }
     }
@@ -126,9 +124,9 @@ public class Grid
      * @param _p Position of variable which domain we want
      * @return Domain of variable at _p position
      */
-    HashSet<Integer> getDomainAtPosition(Position _p)
+    ConcurrentHashMap<Integer, Integer> getDomainAtPosition(Position _p)
     {
-        return _p != null ? grid_domains.get((N * _p.getRow()) + _p.getColumn()) : new HashSet<>();
+        return _p != null ? grid_domains.get((N * _p.getRow()) + _p.getColumn()) : new ConcurrentHashMap<>();
     }
 
     /**
@@ -236,6 +234,104 @@ public class Grid
         return isColumnUnique;
     }
 
+    //--------------------------------------
+    // FORWARD-CHECKING VAR DOMAINS CONTROL |-------------------------------------------------------------
+    //--------------------------------------
+
+    /**
+     * Deletes a value from variable's domain at specified position
+     * @param _p Position of variable
+     * @param _val value (variable from domain) to delete
+     */
+    private void deleteValFromDomainAtPosition(Position _p, Integer _val)
+    {
+        try
+        {
+            grid_domains.get(_p.getRow() * N + _p.getColumn()).remove(_val);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            //
+        }
+    }
+
+    /**
+     * Backs a deleted value from domain at specified position
+     * @param _p Position of variable
+     * @param _val value which will be backed (added again)
+     */
+    private void backDeletedValFromDomainAtPosition(Position _p, Integer _val)
+    {
+        try
+        {
+            grid_domains.get(_p.getRow() * N + _p.getColumn()).put(_val, _val);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            //
+        }
+    }
+
+    /**
+     * Deletes associated value with variable at position from grid_domains forward (in row and column)
+     * @param _p Position of variable
+     * @param _val value to delete from domains
+     */
+    void deleteValsFromDomainsForward(Position _p, Integer _val)
+    {
+        //From row
+        int row = _p.getRow();
+        for(int c = 0; c < _p.getColumn(); c++)
+        {
+            deleteValFromDomainAtPosition(new Position(row, c), _val);
+        }
+        for(int c = _p.getColumn() + 1; c< N; c++)
+        {
+            deleteValFromDomainAtPosition(new Position(row, c), _val);
+        }
+
+        //From column
+        int column = _p.getColumn();
+        for(int r = 0; r < _p.getRow(); r++)
+        {
+            deleteValFromDomainAtPosition(new Position(r, column), _val);
+        }
+        for(int r = _p.getRow() + 1; r < N; r++)
+        {
+            deleteValFromDomainAtPosition(new Position(r, column), _val);
+        }
+    }
+
+    /**
+     * Backs a deleted values from domains related with _p variable position
+     * @param _p Position of variable
+     * @param _val value to back
+     */
+    void backDeletedValsFromDomains(Position _p, Integer _val)
+    {
+        //From row
+        int row = _p.getRow();
+        for(int c = 0; c < _p.getColumn(); c++)
+        {
+            backDeletedValFromDomainAtPosition(new Position(row, c), _val);
+        }
+        for(int c = _p.getColumn() + 1; c< N; c++)
+        {
+            backDeletedValFromDomainAtPosition(new Position(row, c), _val);
+        }
+
+        //From column
+        int column = _p.getColumn();
+        for(int r = 0; r < _p.getRow(); r++)
+        {
+            backDeletedValFromDomainAtPosition(new Position(r, column), _val);
+        }
+        for(int r = _p.getRow() + 1; r < N; r++)
+        {
+            backDeletedValFromDomainAtPosition(new Position(r, column), _val);
+        }
+    }
+
     //-----------
     // PRINTERS |-------------------------------------------------------------
     //-----------
@@ -259,12 +355,17 @@ public class Grid
     public void printAllDomains()
     {
         int i = 0;
-        for(HashSet<Integer> posDomain : grid_domains)
+        for(ConcurrentHashMap<Integer, Integer> posDomain : grid_domains)
         {
             System.out.print("Pole " + i/N + "/" + i%N + " domains = ");
-            for(Integer valFromDomain : posDomain) System.out.print(valFromDomain + " | ");
-            System.out.println();
-            i++;
+            Iterator it = posDomain.entrySet().iterator();
+            while(it.hasNext())
+            {
+                Map.Entry pair = (Map.Entry) it.next();
+                Integer valFromDomain = (Integer) pair.getKey();
+                System.out.print(valFromDomain + " | ");
+                it.remove();
+            }
         }
     }
 
@@ -330,7 +431,7 @@ public class Grid
      * Grid_domains getter
      * @return Grid_domains array - Array of domains of each CSP variable
      */
-    public List<HashSet<Integer>> getGrid_domains()
+    public List<ConcurrentHashMap<Integer, Integer>> getGrid_domains()
     {
         return grid_domains;
     }
@@ -339,7 +440,7 @@ public class Grid
      * Grid_domains setter
      * @param _grid_domains new Grid_domains (for each CSP variable) to replace with this
      */
-    public void setGrid_domains(List<HashSet<Integer>> _grid_domains)
+    public void setGrid_domains(List<ConcurrentHashMap<Integer, Integer>> _grid_domains)
     {
         this.grid_domains = _grid_domains;
     }
