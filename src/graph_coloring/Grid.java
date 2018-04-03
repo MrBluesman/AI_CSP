@@ -1,17 +1,15 @@
 package graph_coloring;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Grid
 {
     private int N;                              //Grid size
     private Integer[][] grid_array;             //Array of CSP variables (Grid implementation)
     private List<Integer> filled_positions;     //Filled positions
-    private List<HashSet<Integer>> grid_domains; //domains for each variable (position) (List of positions implement.)
+    private List<ConcurrentHashMap<Integer, Integer>> grid_domains; //domains for each variable (position) (List of positions implement.)
     private int colors_amount;                  //Amount of color (domain size)
 
     /**
@@ -28,7 +26,7 @@ public class Grid
 
         //Initializing a HashSet for each CSP variable in array
         grid_domains = new ArrayList<>();
-        for(int i = 0; i < N * N; i++) grid_domains.add(new HashSet<>());
+        for(int i = 0; i < N * N; i++) grid_domains.add(new ConcurrentHashMap<>());
     }
 
     /**
@@ -44,7 +42,7 @@ public class Grid
 
         //Initializing a HashSet for each CSP variable in array
         grid_domains = new ArrayList<>();
-        for(int i = 0; i < N * N; i++) grid_domains.add(new HashSet<>());
+        for(int i = 0; i < N * N; i++) grid_domains.add(new ConcurrentHashMap<>());
     }
 
     //----------
@@ -89,7 +87,7 @@ public class Grid
      * @param _p Position which color we want to get
      * @return Color of _p position if exists, null if it's not
      */
-    private Integer getColorAtPositionIfExists(Position _p)
+    Integer getColorAtPositionIfExists(Position _p)
     {
         try
         {
@@ -116,9 +114,9 @@ public class Grid
      * @param _p Position of variable which domain we want
      * @return Domain of variable at _p position
      */
-    HashSet<Integer> getDomainAtPosition(Position _p)
+    ConcurrentHashMap<Integer, Integer> getDomainAtPosition(Position _p)
     {
-        return _p != null ? grid_domains.get((N * _p.getRow()) + _p.getColumn()) : new HashSet<>();
+        return _p != null ? grid_domains.get((N * _p.getRow()) + _p.getColumn()) : new ConcurrentHashMap<>();
     }
 
     /**
@@ -173,11 +171,17 @@ public class Grid
      */
     void expandDomains()
     {
-        for(HashSet<Integer> domain : grid_domains)
+//        for(HashSet<Integer> domain : grid_domains)
+//        {
+//            domain.add(colors_amount);
+//        }
+//        colors_amount++;
+        for(ConcurrentHashMap<Integer, Integer> domain : grid_domains)
         {
-            domain.add(colors_amount);
+            domain.put(colors_amount, colors_amount);
         }
         colors_amount++;
+
     }
 
     /**
@@ -185,16 +189,25 @@ public class Grid
      */
     void reduceDomains()
     {
+//        colors_amount--;
+//        for(HashSet<Integer> domain : grid_domains)
+//        {
+//            domain.remove(colors_amount);
+//        }
         colors_amount--;
-        for(HashSet<Integer> domain : grid_domains)
+        for(ConcurrentHashMap<Integer, Integer> domain : grid_domains)
         {
             domain.remove(colors_amount);
         }
     }
 
+    //-------------
+    // CONSTRAINTS |-------------------------------------------------------------
+    //-------------
+
     //CONSTRAINT 1 - Different color with neighbours
     /**
-     * Checks if variables at specified positions has different colors (different values)
+     * Checks if variables at specified positions have different colors (different values)
      * @param _p1 Position of 1st variable
      * @param _p2 Position of 2nd variable
      * @return True if has different colors, false if it's not
@@ -214,6 +227,11 @@ public class Grid
         }
     }
 
+    /**
+     * Checks if the variable at specified position has different colors (values) with its neighbours
+     * @param _p Position of variable
+     * @return True if have different colors, false if it's not
+     */
     boolean hasDifferentColorsWithNeighbours(Position _p)
     {
         return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()))          //UP
@@ -224,11 +242,11 @@ public class Grid
 
     //CONSTRAINT 2 - Values of colors with neighbours are different by at least 2
     /**
-     * Checks if variables at specified positions has different values of colors (at least by _diff)
+     * Checks if variables at specified positions have different values of colors (at least by _diff)
      * @param _p1 Position of 1st variable
      * @param _p2 Position of 2nd variable
      * @param _diff Minimal difference between values of colors
-     * @return True if has different values of colors at least by _diff, false if it's not
+     * @return True if have different values of colors at least by _diff, false if it's not
      */
     private boolean hasDifferentColorsAtPositions(Position _p1, Position _p2, int _diff)
     {
@@ -244,6 +262,12 @@ public class Grid
         }
     }
 
+    /**
+     * Checks if variable at specified position has different values of colors (at least by _diff) with its neighbours
+     * @param _p Position of variable
+     * @param _diff Minimal difference between values of colors
+     * @return True if has different values of colors at least by _diff with neighbours, false if it's not
+     */
     boolean hasDifferentColorsWithNeighbours(Position _p, int _diff)
     {
         return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn()), _diff)          //UP
@@ -253,6 +277,12 @@ public class Grid
     }
 
     //CONSTRAINT 3 - Different Colors with positions distant by 2
+
+    /**
+     * Checks if variable at specified position has a different colors (values) with positions distant by 2
+     * @param _p Position of variable
+     * @return True if has different values of colors with position distant by 2, false if it's not
+     */
     boolean hasDifferentColorsWithPositionsDistantBy2(Position _p)
     {
         return (hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 2, _p.getColumn()))                    //N
@@ -264,6 +294,134 @@ public class Grid
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow(), _p.getColumn() - 2))               //W
                 && hasDifferentColorsAtPositions(_p, new Position(_p.getRow() - 1, _p.getColumn() - 1))     //N-W
         );
+    }
+
+    //--------------------------------------
+    // FORWARD-CHECKING VAR DOMAINS CONTROL |-------------------------------------------------------------
+    //--------------------------------------
+
+    /**
+     * Deletes a color from variable's domain at specified position
+     * @param _p Position of variable
+     * @param _color color (variable from domain) to delete
+     */
+    private Integer deleteColorFromDomainAtPosition(Position _p, Integer _color)
+    {
+        try
+        {
+            return grid_domains.get(_p.getRow() * N + _p.getColumn()).remove(_color);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Backs a deleted _color from domain at specified position
+     * @param _p Position of variable
+     * @param _color color which will be backed (added again)
+     */
+    private void backDeletedColorFromDomainAtPosition(Position _p, Integer _color)
+    {
+        try
+        {
+            grid_domains.get(_p.getRow() * N + _p.getColumn()).put(_color, _color);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            //
+        }
+    }
+
+    /**
+     * Deletes associated _color with variable at position from grid_domains forward
+     * @param _p Position of variable
+     * @param _color color (value to delete)
+     * @return backup list for repair domain after back a colors to in
+     */
+    List<String> deleteDomainsForward(Position _p, Integer _color)
+    {
+        //Delete from distant by 1 and color > 1 and < 1
+        List<String> backupList = new ArrayList<>();
+        //UP color + 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn()), _color + 1) != null)
+            backupList.add((_p.getRow() - 1) + "," + _p.getColumn() + "," + (_color + 1));
+        //UP color - 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn()), _color - 1) != null)
+            backupList.add((_p.getRow() - 1) + "," + _p.getColumn() + "," + (_color - 1));
+        //RIGHT color + 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() + 1), _color + 1) != null)
+            backupList.add(_p.getRow() + "," + (_p.getColumn() + 1) + "," + (_color + 1));
+        //RIGHT color - 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() + 1), _color - 1) != null)
+            backupList.add(_p.getRow() + "," + (_p.getColumn() + 1) + "," + (_color - 1));
+        //DOWN color + 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn()), _color + 1) != null)
+            backupList.add((_p.getRow() + 1) + "," + _p.getColumn() + "," + (_color + 1));
+        //DOWN color - 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn()), _color - 1) != null)
+            backupList.add((_p.getRow() + 1) + "," + _p.getColumn() + "," + (_color - 1));
+        //LEFT color + 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() - 1), _color + 1) != null)
+            backupList.add(_p.getRow() + "," + (_p.getColumn() - 1) + "," + (_color + 1));
+        //LEFT color - 1
+        if(deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() - 1), _color - 1) != null)
+            backupList.add(_p.getRow() + "," + (_p.getColumn() - 1) + "," + (_color - 1));
+
+
+        //Delete from up, right, down and left position
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn()), _color);                      //UP
+        deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() + 1), _color);                      //RIGHT
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn()), _color);                      //DOWN
+        deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() - 1), _color);                      //LEFT
+
+        //Delete from distant by 2
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() - 2, _p.getColumn()), _color);                     //N
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn() + 1), _color);         //N-E
+        deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() + 2), _color);                   //E
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn() + 1), _color);          //S-E
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() + 2, _p.getColumn()), _color);                     //S
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn() - 1), _color);         //S-W
+        deleteColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() - 2), _color);                  //W
+        deleteColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn() - 1), _color);         //N-W
+
+        return backupList;
+    }
+
+    /**
+     * Backs a deleted _color from domains related with _p variable position
+     * @param _p Position of variable
+     * @param _color color (value) to back
+     * @param _backupList List with non regular positions and colors to backup after delete
+     */
+    void backDeletedColorFromDomains(Position _p, Integer _color, List<String> _backupList)
+    {
+        //Back to distant by 1 and color > 1 and < 1
+        //backupList contains a information in format row,column,color, we need to split them
+        //through all position in list
+        for (String backElem : _backupList)
+        {
+            String[] partsOfBackupList = backElem.split(",");
+            backDeletedColorFromDomainAtPosition(new Position(Integer.valueOf(partsOfBackupList[0]),
+                    Integer.valueOf(partsOfBackupList[1])), Integer.valueOf(partsOfBackupList[2]));
+        }
+
+        //Back to up, right, down and left position
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn()), _color);                      //UP
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() + 1), _color);                      //RIGHT
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn()), _color);                      //DOWN
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() - 1), _color);                      //LEFT
+
+        //Back to distant by 2
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() - 2, _p.getColumn()), _color);                     //N
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn() + 1), _color);         //N-E
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() + 2), _color);                   //E
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn() + 1), _color);          //S-E
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() + 2, _p.getColumn()), _color);                     //S
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() + 1, _p.getColumn() - 1), _color);         //S-W
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow(), _p.getColumn() - 2), _color);                  //W
+        backDeletedColorFromDomainAtPosition(new Position(_p.getRow() - 1, _p.getColumn() - 1), _color);         //N-W
     }
 
     //-----------
@@ -286,16 +444,19 @@ public class Grid
     /**
      * Prints a domain of each Grid position in array (each CSP variable)
      */
-    void printAllDomains()
+    public void printAllDomains()
     {
         int i = 0;
-        for(HashSet<Integer> posDomain : grid_domains)
+        for(ConcurrentHashMap<Integer, Integer> posDomain : grid_domains)
         {
             System.out.print("Pole " + i/N + "/" + i%N + " domains = ");
-
-            for(Integer valFromDomain : posDomain) System.out.print(valFromDomain + " | ");
+            for (Object o : posDomain.entrySet())
+            {
+                Map.Entry pair = (Map.Entry) o;
+                Integer colorFromDomain = (Integer) pair.getKey();
+                System.out.print(colorFromDomain + " | ");
+            }
             System.out.println();
-            i++;
         }
     }
 
@@ -361,7 +522,7 @@ public class Grid
      * Grid_domains getter
      * @return Grid_domains array - Array of domains of each CSP variable
      */
-    public List<HashSet<Integer>> getGrid_domains()
+    public List<ConcurrentHashMap<Integer, Integer>> getGrid_domains()
     {
         return grid_domains;
     }
@@ -370,7 +531,7 @@ public class Grid
      * Grid_domains setter
      * @param _grid_domains new Grid_domains (for each CSP variable) to replace with this
      */
-    public void setGrid_domains(List<HashSet<Integer>> _grid_domains)
+    public void setGrid_domains(List<ConcurrentHashMap<Integer, Integer>> _grid_domains)
     {
         this.grid_domains = _grid_domains;
     }
