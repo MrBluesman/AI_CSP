@@ -102,7 +102,8 @@ public class CSPGrid
         }
 
         //Get a position and its domain
-        Position pos = grid.getNotFilledPosition();                 //Founded position
+//        Position pos = grid.getNotFilledPosition();                 //Founded position
+        Position pos = grid.getNotFilledPositionSmallestDomain();
         ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
         //Choosing a color from domain at position (Constraints CHECKING)

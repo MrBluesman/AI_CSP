@@ -83,6 +83,32 @@ public class Grid
     }
 
     /**
+     * Finds a uncolored position with smallest domains
+     * @return position of uncolored Graph variable with the smallest domain
+     */
+    Position getNotFilledPositionSmallestDomain()
+    {
+        int i = 0;
+        Position best = null;
+        int domainSize = colors_amount + 1; //to reduce finding if domainSize will be 0
+
+        while(i < getVarAmount() && domainSize > 0)
+        {
+            if(!filled_positions.contains(i))
+            {
+                int positionDomainSize = getDomainAtPosition(new Position(i/N, i%N)).size();
+                if(positionDomainSize < domainSize)
+                {
+                    best = new Position(i/N, i%N);
+                    domainSize = positionDomainSize;
+                }
+            }
+            i++;
+        }
+        return best;
+    }
+
+    /**
      * If _p position exists return a color of its
      * @param _p Position which color we want to get
      * @return Color of _p position if exists, null if it's not
@@ -171,11 +197,6 @@ public class Grid
      */
     void expandDomains()
     {
-//        for(HashSet<Integer> domain : grid_domains)
-//        {
-//            domain.add(colors_amount);
-//        }
-//        colors_amount++;
         for(ConcurrentHashMap<Integer, Integer> domain : grid_domains)
         {
             domain.put(colors_amount, colors_amount);
@@ -189,11 +210,6 @@ public class Grid
      */
     void reduceDomains()
     {
-//        colors_amount--;
-//        for(HashSet<Integer> domain : grid_domains)
-//        {
-//            domain.remove(colors_amount);
-//        }
         colors_amount--;
         for(ConcurrentHashMap<Integer, Integer> domain : grid_domains)
         {
