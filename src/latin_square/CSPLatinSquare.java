@@ -81,19 +81,20 @@ public class CSPLatinSquare
 
         int levell = level;
         //int amountOfResults = 0;
-        if(endB) return 0;
+        if(endFC) return 0;
 
         //Grid CSP completed!
         if(grid.hasFilledNodes())
         {
             grid.printGrid();
             System.out.println();
-            endB = true;
+            endFC = true;
             return 0;
         }
 
         //Get a position and its domain
-        Position pos = grid.getNotFilledPosition();                 //Founded position
+//        Position pos = grid.getNotFilledPosition();                 //Founded position
+        Position pos = grid.getNotFilledPositionSmallestDomain();
         ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
         for (Object o : posDomain.entrySet())
