@@ -83,8 +83,49 @@ public class Grid
     }
 
     /**
+     * Counts a uncolored neighbours at specified Position
+     * @param _p Position
+     * @return number of uncolored neighbours at specified Position
+     */
+    private int countUncoloredNeighbours(Position _p)
+    {
+        int result = 0;
+        if(getColorAtPositionIfExists(new Position(_p.getRow() + 1, _p.getColumn())) == null) result++;
+        if(getColorAtPositionIfExists(new Position(_p.getRow() - 1, _p.getColumn())) == null) result++;
+        if(getColorAtPositionIfExists(new Position(_p.getRow(), _p.getColumn() + 1)) == null) result++;
+        if(getColorAtPositionIfExists(new Position(_p.getRow(), _p.getColumn() - 1)) == null) result++;
+        return result;
+    }
+
+    /**
+     * Finds a uncolored position with most uncolored neighbours
+     * @return Position of uncolored Graph variable with the most uncolored neighbours
+     */
+    Position getNotFilledPositionMostUncoloredNeighbours()
+    {
+        int i = 0;
+        Position best = null;
+        int uncoloredNeighbours = -1;
+
+        while(i < getVarAmount() && uncoloredNeighbours < 4)
+        {
+            if(!filled_positions.contains(i))
+            {
+                int positionUncoloredNeihbours = countUncoloredNeighbours(new Position(i/N, i%N));
+                if(positionUncoloredNeihbours > uncoloredNeighbours)
+                {
+                    best = new Position(i/N, i%N);
+                    uncoloredNeighbours = positionUncoloredNeihbours;
+                }
+            }
+            i++;
+        }
+        return best;
+    }
+
+    /**
      * Finds a uncolored position with smallest domains
-     * @return position of uncolored Graph variable with the smallest domain
+     * @return Position of uncolored Graph variable with the smallest domain
      */
     Position getNotFilledPositionSmallestDomain()
     {
