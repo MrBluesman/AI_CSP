@@ -93,6 +93,47 @@ public class Grid
     }
 
     /**
+     * Counts a unset neighbours at specified Position
+     * @param _p Position
+     * @return number of unset neighbours at specified Position
+     */
+    private int countUnsetNeighbours(Position _p)
+    {
+        int result = 0;
+        if(getValAtPositionIfExists(new Position(_p.getRow() + 1, _p.getColumn())) == null) result++;
+        if(getValAtPositionIfExists(new Position(_p.getRow() - 1, _p.getColumn())) == null) result++;
+        if(getValAtPositionIfExists(new Position(_p.getRow(), _p.getColumn() + 1)) == null) result++;
+        if(getValAtPositionIfExists(new Position(_p.getRow(), _p.getColumn() - 1)) == null) result++;
+        return result;
+    }
+
+    /**
+     * Finds a unset position with most uncolored neighbours
+     * @return Position of Latin square variable with the most unset neighbours
+     */
+    Position getNotFilledPositionMostUnsetNeighbours()
+    {
+        int i = 0;
+        Position best = null;
+        int uncoloredNeighbours = -1;
+
+        while(i < getVarAmount() && uncoloredNeighbours < 4)
+        {
+            if(!filled_positions.contains(i))
+            {
+                int positionUncoloredNeighbours = countUnsetNeighbours(new Position(i/N, i%N));
+                if(positionUncoloredNeighbours > uncoloredNeighbours)
+                {
+                    best = new Position(i/N, i%N);
+                    uncoloredNeighbours = positionUncoloredNeighbours;
+                }
+            }
+            i++;
+        }
+        return best;
+    }
+
+    /**
      * Finds a unfilled position with smallest domains
      * @return position of unfilled Latin square variable with the smallest domain
      */

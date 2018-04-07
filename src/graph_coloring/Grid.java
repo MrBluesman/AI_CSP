@@ -111,11 +111,11 @@ public class Grid
         {
             if(!filled_positions.contains(i))
             {
-                int positionUncoloredNeihbours = countUncoloredNeighbours(new Position(i/N, i%N));
-                if(positionUncoloredNeihbours > uncoloredNeighbours)
+                int positionUncoloredNeighbours = countUncoloredNeighbours(new Position(i/N, i%N));
+                if(positionUncoloredNeighbours > uncoloredNeighbours)
                 {
                     best = new Position(i/N, i%N);
-                    uncoloredNeighbours = positionUncoloredNeihbours;
+                    uncoloredNeighbours = positionUncoloredNeighbours;
                 }
             }
             i++;
