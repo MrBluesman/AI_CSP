@@ -29,9 +29,8 @@ public class CSPLatinSquare
     public int Backtracking(int level)
     {
 
-        int levell = level;
-        //int amountOfResults = 0;
-        if(endB) return 0;
+        int amountOfSteps = 0;
+        if(endB) return amountOfSteps;
 
         //Grid CSP completed!
         if(grid.hasFilledNodes())
@@ -39,15 +38,18 @@ public class CSPLatinSquare
             grid.printGrid();
             System.out.println();
             endB = true;
-            return 0;
+            return amountOfSteps;
         }
 
         //Get a position and its domain
         Position pos = grid.getNotFilledPosition();                 //Founded position
+//        Position pos = grid.getNotFilledPositionMostUnsetNeighbours();
         ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
+//        amountOfSteps++;
         for (Object o : posDomain.entrySet())
         {
+            amountOfSteps++;
             Map.Entry pair = (Map.Entry) o;
             Integer val = (Integer) pair.getKey();
             //Setting a first color from domain
@@ -67,21 +69,20 @@ public class CSPLatinSquare
 
             if (ok)
             {
-                Backtracking(levell + 1);
+                amountOfSteps += Backtracking(level + 1);
                 //Cleaning after backing from recursion
                 grid.unsetPositionAsFilled(pos);
                 grid.unsetValAtPosition(pos);
             }
         }
-        return 0;
+        return amountOfSteps;
     }
 
     public int ForwardChecking(int level)
     {
 
-        int levell = level;
-        //int amountOfResults = 0;
-        if(endFC) return 0;
+        int amountOfSteps = 0;
+        if(endFC) return amountOfSteps;
 
         //Grid CSP completed!
         if(grid.hasFilledNodes())
@@ -89,16 +90,19 @@ public class CSPLatinSquare
             grid.printGrid();
             System.out.println();
             endFC = true;
-            return 0;
+            return amountOfSteps;
         }
 
         //Get a position and its domain
-//        Position pos = grid.getNotFilledPosition();                 //Founded position
-        Position pos = grid.getNotFilledPositionSmallestDomain();
+        Position pos = grid.getNotFilledPosition();                 //Founded position
+//        Position pos = grid.getNotFilledPositionMostUnsetNeighbours();
+//        Position pos = grid.getNotFilledPositionSmallestDomain();
         ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
+//        amountOfSteps++;
         for (Object o : posDomain.entrySet())
         {
+            amountOfSteps++;
             Map.Entry pair = (Map.Entry) o;
             Integer val = (Integer) pair.getKey();
             //Setting a first color from domain
@@ -119,14 +123,14 @@ public class CSPLatinSquare
 
             if (ok)
             {
-                ForwardChecking(levell + 1);
+                amountOfSteps += ForwardChecking(level + 1);
                 //Cleaning after backing from recursion
                 grid.backDeletedValsFromDomains(pos, val);
                 grid.unsetPositionAsFilled(pos);
                 grid.unsetValAtPosition(pos);
             }
         }
-        return 0;
+        return amountOfSteps;
     }
 
     //--------------------

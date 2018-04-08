@@ -29,25 +29,28 @@ public class CSPGrid
 
     public int Backtracking(int level)
     {
-        int levell = level;
-        //int amountOfResults = 0;
-        if(endB) return 0;
+//        int levell = level;
+        int amountOfSteps = 0;
+        if(endB) return amountOfSteps;
         //Grid CSP completed!
         if(grid.hasFilledNodes())
         {
             grid.printGrid();
             System.out.println();
             endB = true;
-            return 0;
+            return amountOfSteps;
         }
 
         //Get a position and its domain
         Position pos = grid.getNotFilledPosition();                 //Founded position
+//        Position pos = grid.getNotFilledPositionMostUncoloredNeighbours();
         ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
+//        amountOfSteps++;
         //Choosing a color from domain at position (Constraints CHECKING)
         for(Object o : posDomain.entrySet())
         {
+            amountOfSteps++;
             Map.Entry pair = (Map.Entry) o;
             Integer color = (Integer) pair.getKey();
             //Setting a first color from domain
@@ -69,7 +72,7 @@ public class CSPGrid
             if(ok)
             {
 //                grid.printGrid();
-                Backtracking(levell + 1);
+                amountOfSteps += Backtracking(level + 1);
                 //Cleaning after backing from recursion
                 grid.unsetPositionAsFilled(pos);
                 grid.unsetColorAtPosition(pos);
@@ -78,37 +81,40 @@ public class CSPGrid
 
         //if we are on the first Backtracking level our colors amount is not enough
         //We need to expand domains and run Backtracking again
-        if(levell == 0 && !endB)
+        if(level == 0 && !endB)
         {
             grid.expandDomains();
-            Backtracking(0);
+            amountOfSteps += Backtracking(0);
         }
 
-        return 0;
+        return amountOfSteps;
     }
 
     public int ForwardChecking(int level)
     {
-        int levell = level;
-        //int amountOfResults = 0;
-        if(endFC) return 0;
+//        int levell = level;
+        int amountOfSteps = 0;
+        if(endFC) return amountOfSteps;
         //Grid CSP completed!
         if(grid.hasFilledNodes())
         {
             grid.printGrid();
             System.out.println();
             endFC = true;
-            return 0;
+            return amountOfSteps;
         }
 
         //Get a position and its domain
-//        Position pos = grid.getNotFilledPosition();                 //Founded position
-        Position pos = grid.getNotFilledPositionSmallestDomain();
+        Position pos = grid.getNotFilledPosition();                 //Founded position
+//        Position pos = grid.getNotFilledPositionMostUncoloredNeighbours();
+//        Position pos = grid.getNotFilledPositionSmallestDomain();
         ConcurrentHashMap<Integer, Integer> posDomain = grid.getDomainAtPosition(pos); //domain of this position
 
+//        amountOfSteps++;
         //Choosing a color from domain at position (Constraints CHECKING)
         for(Object o : posDomain.entrySet())
         {
+            amountOfSteps++;
             Map.Entry pair = (Map.Entry) o;
             Integer color = (Integer) pair.getKey();
             //Setting a first color from domain
@@ -131,7 +137,7 @@ public class CSPGrid
 
             if(ok)
             {
-                ForwardChecking(levell + 1);
+                amountOfSteps += ForwardChecking(level);
                 //Cleaning after backing from recursion
                 grid.backDeletedColorFromDomains(pos, color, backupColorsList);
                 grid.unsetPositionAsFilled(pos);
@@ -141,13 +147,13 @@ public class CSPGrid
 
         //if we are on the first Backtracking level our colors amount is not enough
         //We need to expand domains and run Backtracking again
-        if(levell == 0 && !endFC)
+        if(level == 0 && !endFC)
         {
             grid.expandDomains();
-            ForwardChecking(0);
+            amountOfSteps += ForwardChecking(0);
         }
 
-        return 0;
+        return amountOfSteps;
     }
 
     //--------------------
